@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER_TERMINAL // v2.6.0</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #050505;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #terminal {
+            max-width: 900px;
+            height: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #00ff6633;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.1);
+            background: rgba(0, 10, 0, 0.85);
+            padding: 20px;
+            border-radius: 5px;
+        }
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        #output::-webkit-scrollbar {
+            width: 5px;
+        }
+        #output::-webkit-scrollbar-thumb {
+            background: #00ff6655;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            border-top: 1px solid #00ff6633;
+            padding-top: 10px;
+        }
+        .prompt-symbol {
+            color: #00ff66;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        #command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+        }
+        .log-info { color: #00ff66; }
+        .log-warn { color: #ffcc00; }
+        .log-error { color: #ff3333; }
+        .log-system { color: #00ccff; }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div id="output"></div>
+        <div class="input-container">
+            <span class="prompt-symbol">root@cyber-sec:~$</span>
+            <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const commandInput = document.getElementById('command-input');
+
+        // 隨機日誌池，用於自動跳出
+        const randomLogs = [
+            { text: "[+] Bypassing firewall on subnet 192.168.1.105...", type: "log-info" },
+            { text: "[*] Sniffing packets on port 443...", type: "log-system" },
+            { text: "[!] Warning: Intrusion detection system (IDS) ping detected.", type: "log-warn" },
+            { text: "[+] Hash cracked: $1$U6b... -> Admin@123", type: "log-info" },
+            { text: "[x] Connection reset by peer (Target: 10.0.4.52)", type: "log-error" },
+            { text: "[+] Injecting payload into memory address 0x7fff5fbff800...", type: "log-info" },
+            { text: "[*] Establishing encrypted tunnel (AES-256)...", type: "log-system" }
+        ];
+
+        // 附加日誌到畫面的函數
+        function appendLog(text, className = "log-info") {
+            const div = document.createElement('div');
+            div.className = className;
+            div.textContent = text;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight; // 自動捲動到底部
+        }
+
+        // 初始化歡迎詞
+        appendLog("INITIALIZING CYBER_OS v2.6 ...", "log-system");
+        appendLog("Type 'help' to see available commands.\n", "log-system");
+
+        // 自動定時跳出日誌（每 2 到 4 秒隨機跳出一行）
+        function triggerAutoLog() {
+            const randomItem = randomLogs[Math.floor(Math.random() * randomLogs.length)];
+            appendLog(randomItem.text, randomItem.type);
+            
+            const nextTime = Math.random() * 2000 + 1500;
+            setTimeout(triggerAutoLog, nextTime);
+        }
+        setTimeout(triggerAutoLog, 2000);
+
+        // 處理指令輸入
+        commandInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const cmd = commandInput.value.trim();
+                if (cmd === "") return;
+
+                // 顯示使用者輸入的指令
+                appendLog(`root@cyber-sec:~$ ${cmd}`, "log-system");
+                
+                // 解析指令並給予回應
+                handleCommand(cmd.toLowerCase());
+
+                // 清空輸入框
+                commandInput.value = "";
+            }
+        });
+
+        // 指令邏輯處理
+        function handleCommand(cmd) {
+            switch(cmd) {
+                let target = cmd.split(" ")[1];
+                case 'help':
+                    appendLog("Available commands:", "log-system");
+                    appendLog("  help         - 顯示此說明選單");
+                    appendLog("  scan         - 掃描目標網路漏洞");
+                    appendLog("  matrix       - 進入母體畫面特效");
+                    appendLog("  clear        - 清除畫面紀錄");
+                    appendLog("  whoami       - 顯示目前登入權限");
+                    appendLog("  hack <ip>    - 模擬入侵指定 IP");
+                    break;
+                case 'scan':
+                    appendLog("[*] Scanning local subnet for open ports...");
+                    setTimeout(() => appendLog("[+] Port 22 (SSH) - OPEN"), "log-info");
+                    setTimeout(() => appendLog("[+] Port 80 (HTTP) - OPEN"), "log-info");
+                    setTimeout(() => appendLog("[!] Port 3389 (RDP) - VULNERABLE", "log-warn"), 1000);
+                    break;
+                case 'clear':
+                    output.innerHTML = "";
+                    break;
+                case 'whoami':
+                    appendLog("uid=0(root) gid=0(root) groups=0(root)", "log-info");
+                    break;
+                case 'matrix':
+                    appendLog("Wake up, Neo...", "log-error");
+                    appendLog("The Matrix has you...", "log-error");
+                    break;
+                default:
+                    if (cmd.startsWith('hack ')) {
+                        const targetIP = cmd.split(' ')[1] || '127.0.0.1';
+                        appendLog(`[*] Initializing exploit against ${targetIP}...`, "log-warn");
+                        setTimeout(() => appendLog(`[+] Exploit sent successfully! Root access gained on ${targetIP}.`, "log-info"), 1500);
+                    } else {
+                        appendLog(`Command not found: ${cmd}. Type 'help' for assistance.`, "log-error");
+                    }
+            }
+        }
+    </script>
+</body>
+</html>
