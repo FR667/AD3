@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER_OS // SECURE KERNEL [v4.1.0]</title>
+    <title>CYBER_CORE // DUMP STREAM</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,196 +19,86 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            padding: 15px;
         }
-        #terminal-container {
+        #stream-container {
             flex-grow: 1;
-            padding: 20px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            overflow: hidden;
-            background: radial-gradient(circle at center, #001105 0%, #000000 100%);
         }
         #output {
-            overflow-y: auto;
-            max-height: 100%;
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            font-size: 14px;
-            line-height: 1.4;
+            gap: 3px;
+            font-size: 13px;
+            line-height: 1.3;
             white-space: pre-wrap;
             word-break: break-all;
         }
-        #output::-webkit-scrollbar {
-            width: 0px; /* 隱藏捲軸增加仿真感 */
-        }
-        .input-line {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .prompt {
-            color: #00ff66;
-            margin-right: 8px;
-            font-weight: bold;
-        }
-        #command-input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: #00ff66;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            outline: none;
-            caret-color: #00ff66;
-        }
-        /* Log Levels */
-        .log-info { color: #00ff66; }
-        .log-sys { color: #00ccff; }
-        .log-warn { color: #ffcc00; }
-        .log-err { color: #ff3333; }
-        .log-boost { color: #ff00ff; font-weight: bold; }
+        /* 不同的隨機顏色讓視覺更逼真 */
+        .c-green { color: #00ff66; }
+        .c-bright { color: #ffffff; font-weight: bold; }
+        .c-cyan { color: #00ffff; }
+        .c-dim { color: #008833; }
+        .c-warn { color: #ffcc00; }
     </style>
 </head>
 <body>
 
-    <div id="terminal-container">
+    <div id="stream-container">
         <div id="output"></div>
-        <div class="input-line">
-            <span class="prompt">root@cyber-core:~#</span>
-            <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
-        </div>
     </div>
 
     <script>
         const output = document.getElementById('output');
-        const commandInput = document.getElementById('command-input');
 
-        let logIntervalTime = 1200; // 預設日誌跳出間隔 (ms)
-        let logTimer = null;
-        let isBoosted = false;
+        // 產生隨機十六進位與亂碼字串
+        function randomHex(length) {
+            let result = '';
+            const characters = 'ABCDEF0123456789X-/_#@$*&%!';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
 
-        // 豐富的英文系統日誌池
-        const logPool = [
-            { text: "[+] Socket connection established with remote node 192.168.4.12:443", type: "log-info" },
-            { text: "[*] Bypassing stateful packet inspection firewall rules...", type: "log-sys" },
-            { text: "[!] Warning: Potential intrusion detection system (IDS) probe at sector 7", type: "log-warn" },
-            { text: "[+] Hash extracted: $6$rounds=65536$k9X... -> Decrypted successfully", type: "log-info" },
-            { text: "[x] Connection reset by peer (Target defense mechanism triggered)", type: "log-err" },
-            { text: "[*] Injecting shellcode into memory segment 0x7fff5fbff800...", type: "log-sys" },
-            { text: "[+] Root privileges escalated via zero-day kernel exploit (CVE-2026-9981)", type: "log-boost" },
-            { text: "[*] Dumping encrypted database table 'users_auth'...", type: "log-info" },
-            { text: "[+] SSL/TLS handshake intercepted, decrypting AES-256 session keys...", type: "log-sys" },
-            { text: "[!] Warning: Unusual outbound traffic spike detected on interface eth0", type: "log-warn" }
+        // 亂碼日誌片段池
+        const garbagePool = [
+            () => `[MEM_DUMP] 0x${randomHex(4)}:${randomHex(4)} -> ${randomHex(16)}`,
+            () => `[PACKET_STREAM] SRC=${randomHex(3)}.${randomHex(3)}.${randomHex(3)}.${randomHex(3)} DST_PORT=0x${randomHex(4)} LEN=${Math.floor(Math.random()*1500)}`,
+            () => `BYPASSING_FIREWALL... INJECTING PAYLOAD [${randomHex(24)}]`,
+            () => `DECRYPTING HASH: $1$${randomHex(8)}$${randomHex(22)} == SUCCESS`,
+            () => `KERNEL_ALERT: SEGMENTATION FAULT AT 0x7FFF${randomHex(6)}`,
+            () => `SOCKET_ESTABLISHED // SECURE_TUNNEL_ACTIVE [AES-256]`,
+            () => `TRACING_ROUTE... NODE_${randomHex(6)} ... STATUS: VULNERABLE`,
+            () => `> 0000${Math.floor(Math.random()*9000+1000)}: ${randomHex(8)} ${randomHex(8)} ${randomHex(8)} ${randomHex(8)}`
         ];
 
-        function appendLog(text, className = "log-info") {
+        // 顏色樣式池
+        const classes = ['c-green', 'c-bright', 'c-cyan', 'c-dim', 'c-warn'];
+
+        function appendGarbage() {
+            const randomFunc = garbagePool[Math.floor(Math.random() * garbagePool.length)];
+            const randomClass = classes[Math.floor(Math.random() * classes.length)];
+
             const div = document.createElement('div');
-            div.className = className;
-            div.textContent = text;
+            div.className = randomClass;
+            div.textContent = randomFunc();
             output.appendChild(div);
-            
-            // 保持畫面行數不要過多造成效能負擔，超過 100 行自動刪除最舊的
-            if (output.children.length > 100) {
+
+            // 保持畫面行數流暢，超過 120 行自動清除最舊的
+            if (output.children.length > 120) {
                 output.removeChild(output.firstChild);
             }
-            
-            // 自動滾動到底部
-            const container = document.getElementById('terminal-container');
-            container.scrollTop = container.scrollHeight;
+
+            // 自動將畫面捲動至最底部，達成持續滾動效果
             window.scrollTo(0, document.body.scrollHeight);
         }
 
-        // 初始化引導文字
-        appendLog("INITIALIZING NEURAL TERMINAL v4.1.0...", "log-sys");
-        appendLog("AUTHENTICATING SECURE SHELL... ACCESS GRANTED.", "log-sys");
-        appendLog("Type 'help' for available system commands.\n", "log-info");
-
-        // 自動跳日誌迴圈
-        function startAutoLogs() {
-            if (logTimer) clearInterval(logTimer);
-            logTimer = setInterval(() => {
-                const randomLog = logPool[Math.floor(Math.random() * logPool.length)];
-                appendLog(randomLog.text, randomLog.type);
-            }, logIntervalTime);
-        }
-        startAutoLogs();
-
-        // 監聽指令輸入
-        commandInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                const cmd = commandInput.value.trim();
-                if (cmd === "") return;
-
-                // 顯示使用者的指令
-                appendLog(`root@cyber-core:~# ${cmd}`, "log-sys");
-                
-                // 處理指令
-                handleCommand(cmd);
-
-                // 清空輸入框
-                commandInput.value = "";
-            }
-        });
-
-        // 核心指令邏輯
-        function handleCommand(cmd) {
-            const lowerCmd = cmd.toLowerCase();
-
-            switch(lowerCmd) {
-                case 'help':
-                    appendLog("AVAILABLE COMMANDS:", "log-sys");
-                    appendLog("  help      - Display this help manual");
-                    appendLog("  scan      - Execute vulnerability and port scan");
-                    appendLog("  67        - OVERRIDE: Boost log generation speed for 5 seconds");
-                    appendLog("  whoami    - Show current effective user identity");
-                    appendLog("  clear     - Clear terminal buffer output");
-                    break;
-
-                case '67':
-                    if (isBoosted) {
-                        appendLog("[!] SYSTEM ALREADY IN OVERDRIVE MODE.", "log-warn");
-                        break;
-                    }
-                    isBoosted = true;
-                    appendLog("[!] COMMAND '67' ACCEPTED: OVERRIDING KERNEL CLOCK...", "log-boost");
-                    appendLog("[+] MAXIMUM CPU THREADS ALLOCATED. LOG SPEED MULTIPLIED.", "log-boost");
-                    
-                    // 加速：每 100ms 就跳出一行日誌
-                    logIntervalTime = 100;
-                    startAutoLogs();
-
-                    // 5秒後恢復正常
-                    setTimeout(() => {
-                        logIntervalTime = 1200;
-                        startAutoLogs();
-                        isBoosted = false;
-                        appendLog("[*] Overdrive mode terminated. System returned to normal speed.", "log-sys");
-                    }, 5000);
-                    break;
-
-                case 'scan':
-                    appendLog("[*] Initializing comprehensive network scan...", "log-sys");
-                    setTimeout(() => appendLog("[+] Host 192.168.1.1 is up (0.001s latency)", "log-info"), 400);
-                    setTimeout(() => appendLog("[+] Port 22/tcp (SSH) OPEN", "log-info"), 900);
-                    setTimeout(() => appendLog("[+] Port 80/tcp (HTTP) OPEN", "log-info"), 1400);
-                    setTimeout(() => appendLog("[!] Port 3389/tcp (RDP) VULNERABLE TO BLUEKEEP", "log-warn"), 2000);
-                    break;
-
-                case 'whoami':
-                    appendLog("uid=0(root) gid=0(root) groups=0(root) - ENCRYPTED SESSION ACTIVE", "log-boost");
-                    break;
-
-                case 'clear':
-                    output.innerHTML = "";
-                    break;
-
-                default:
-                    appendLog(`[-] Command not recognized: '${cmd}'. Type 'help' for options.`, "log-err");
-            }
-        }
+        // 超高速自動狂飆：每隔 30 毫秒就自動跳出一行亂碼
+        setInterval(appendGarbage, 30);
     </script>
 </body>
 </html>
